@@ -1,0 +1,5 @@
+server:
+  port: 3000
+
+nats: 
+  server: nats://10.205.148.38:4222 
