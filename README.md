@@ -1,6 +1,6 @@
 # User API Gateway
 
-user-apigateway is a Golang base project for developing RESTful services, using Echo framework. 
+user-apigateway is a Golang RESTful services project, using Echo framework. 
 
 ## Getting started
 
@@ -12,7 +12,9 @@ go run app/cmd/main.go
 
 ```
 
-The application runs as an HTTP server at port 3000 (config.dev.yaml server.port). It provides the following RESTful endpoints:
+The application runs as an HTTP server at port 3000 (config.dev.yaml server.port). 
+
+It provides the following RESTful endpoints:
 
 * `POST v1/api/users`: create new user
 
