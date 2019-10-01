@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"sync"
 
 	"user-apigateway/app/model"
 
@@ -23,13 +24,34 @@ type UserHandler struct {
 
 // CreateUser
 func (handler *UserHandler) CreateUser(c echo.Context) error {
+	var wg sync.WaitGroup
+	wg.Add(1)
+
 	user := new(model.User)
 
-	handler.nc.Subscribe("user.create", func(u *model.User) {
-		fmt.Printf("\nReceived a user: %+v", u)
-	})
 
-	handler.nc.Publish("user.create", user)
+	ch := make(chan *model.User)
 
-	return c.JSON(http.StatusCreated, user)
+	// BindSendChan() allows binding of a Go channel to a nats
+	// subject for publish operations. The Encoder attached to the
+	// EncodedConn will be used for marshaling.	
+	handler.nc.BindSendChan("user.create", ch)
+	ch <- user
+
+	// BindRecvChan() allows binding of a Go channel to a nats
+	// subject for subscribe operations. The Encoder attached to the
+	// EncodedConn will be used for un-marshaling.	
+	handler.nc.BindRecvChan("user.create.completed", ch)
+
+	u := <-ch
+
+	fmt.Printf("%+v\n", u)
+
+	return c.JSON(http.StatusCreated, u)
+}
+
+
+
+func publishUserCreate(){
+
 }

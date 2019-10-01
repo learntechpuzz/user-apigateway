@@ -1,7 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
+	"os"
+	"os/signal"
+	"time"
 
 	"user-apigateway/app/config"
 	"user-apigateway/app/handler"
@@ -45,7 +49,34 @@ func main() {
 	handler.NewUserHandler(e, nc)
 
 	// Server
-	e.Logger.Fatal(e.Start(":" + viper.GetString(serverPort)))
+
+	// Start server
+	go func() {
+		if err := e.Start(":" + viper.GetString(serverPort)); err != nil {
+			e.Logger.Info("shutting down the server")
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server with
+	// a timeout of 10 seconds.
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	log.Println("Shutdown Server ...")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := e.Shutdown(ctx); err != nil {
+		e.Logger.Fatal(err)
+	}
+
+	select {
+	case <-ctx.Done():
+		log.Println("timeout of 5 seconds.")
+		log.Println("Close NATS server encoded connection.")
+		nc.Close()
+	}
+	log.Println("Server exiting")
 
 }
 
