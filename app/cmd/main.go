@@ -58,12 +58,12 @@ func main() {
 	}()
 
 	// Wait for interrupt signal to gracefully shutdown the server with
-	// a timeout of 10 seconds.
+	// a timeout of 2 seconds.
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
 	log.Println("Shutdown Server ...")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	if err := e.Shutdown(ctx); err != nil {
@@ -72,7 +72,7 @@ func main() {
 
 	select {
 	case <-ctx.Done():
-		log.Println("timeout of 5 seconds.")
+		log.Println("timeout of 2 seconds.")
 		log.Println("Close NATS server encoded connection.")
 		nc.Close()
 	}
