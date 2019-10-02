@@ -15,6 +15,7 @@ import (
 func NewUserHandler(e *echo.Echo, nc *nats.EncodedConn) {
 	handler := UserHandler{nc: nc}
 	e.POST("/v1/api/users", handler.CreateUser)
+	e.GET("/v1/api/users", handler.GetUser)
 }
 
 // UserHandler contains NATS server encoded connection
@@ -42,12 +43,25 @@ func (handler *UserHandler) CreateUser(c echo.Context) error {
 	u := <-ch
 	fmt.Printf("Received a User: %+v\n", u)
 
-
 	return c.JSON(http.StatusCreated, u)
 }
 
+// GetUser
+func (handler *UserHandler) GetUser(c echo.Context) error {
 
+	users := new([]model.User)
 
-func publishUserCreate(){
+	// Publish to user.list via channel
+	handler.nc.Publish("user.list", users)
 
+	// Subscribe to user.list.completed via channel
+	ch := make(chan *[]model.User)
+	handler.nc.BindRecvChan("user.list.completed", ch)
+
+	ul := <-ch
+	fmt.Printf("Received Users: %+v\n", ul)
+
+	return c.JSON(http.StatusCreated, ul)
 }
+
+
